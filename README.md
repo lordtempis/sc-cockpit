@@ -1,6 +1,6 @@
 # SC Cockpit
 
-Standalone, local Star Citizen instruments and configurable audio warnings. Independent of StarBot. The dashboard reads telemetry locally. The optional door diagnostic saves a capture on your PC.
+Standalone, local Star Citizen instruments and configurable audio warnings. The dashboard reads telemetry locally. The optional door diagnostic saves a capture on your PC.
 
 ## Windows test build
 
