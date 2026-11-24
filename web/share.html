@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Share dashboard · SC Cockpit</title><link rel="stylesheet" href="/style.css"><script defer src="/share.js"></script></head>
+<body><main class="sharing-page">
+<a href="/">← SC Cockpit</a><h1>Share dashboard</h1>
+<p>Use a tablet or another display on the same private network. Anyone with the current link on that network can view your instruments.</p>
+<section class="panel">
+<label for="share-address">This PC’s Wi-Fi or Ethernet address</label>
+<select id="share-address"></select>
+<button type="button" id="start-share" disabled>Start sharing</button>
+<div id="share-link-panel" hidden><h2>Open on your display</h2>
+<img id="share-qr" width="208" height="208" alt="Scan to open the dashboard on another device">
+<input id="share-url" type="text" readonly aria-label="Display link"><button type="button" id="copy-share">Copy link</button>
+<button type="button" id="stop-share">Stop sharing</button></div>
+<p role="status" id="share-status">Checking network addresses…</p>
+</section></main></body></html>

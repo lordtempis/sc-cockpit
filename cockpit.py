@@ -1,6 +1,7 @@
 """Local, read-only Star Citizen cockpit. Python 3.11+."""
 from __future__ import annotations
 
+from sharing import ASSETS, DashboardHandler, DisplaySharing, qr_svg
 from kill_monitor import DeathMonitor
 from recordings import Recordings
 from diagnostics import Diagnostics, installation, schema_fields
@@ -20,7 +21,7 @@ import time
 import uuid
 import tempfile
 import webbrowser
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from http.server import ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
 ROOT = Path(__file__).resolve().parent
@@ -206,7 +207,7 @@ class State:
             self.diagnostics.observe(frame, self.panels, now)
             self.recordings.update(self, now)
 
-    def snapshot(self, now=None):
+    def snapshot(self, now=None, *, display_only=False):
         now = time.monotonic() if now is None else now
         with self.lock:
             if self.paused_at is not None:
@@ -234,6 +235,17 @@ class State:
                          'scenarios': SCENARIOS if self.demo else (),
                          'history': [[round(now-ts, 2), value] for ts, value in self.journal.history
                                      if 0 <= now-ts <= 60]}
+            if display_only:
+                # Share panel readings and telemetry transitions only. PC diagnostics,
+                # account balance, Game.log activity and recording data stay local.
+                actor = dashboard['sections'].get('actor')
+                if actor is not None:
+                    dashboard['sections']['actor'] = {k: v for k, v in actor.items() if k != 'uec_balance'}
+                dashboard['reported'].get('actor', {}).pop('uec_balance', None)
+                dashboard.pop('scenarios')
+                return {'dashboard': dashboard, 'last_sample_at': self.last_sample_at,
+                        'mode': 'demo' if self.demo else 'live', 'active': active,
+                        'ages': {k: max(0, now-v) for k, v in self.updated.items()}}
             if self.activity is not None:
                 dashboard['activity'] = {k: v for k, v in self.activity.items() if k != 'entries'}
                 combined = self.activity['entries'] + dashboard['journal']
@@ -352,22 +364,11 @@ def demo_stream(state):
         time.sleep(.25)
 
 
-def handler_for(state):
-    class Handler(BaseHTTPRequestHandler):
+def handler_for(state, sharing=None):
+    class Handler(DashboardHandler):
         def allowed_host(self):
             return self.headers.get('Host') in {
                 f'127.0.0.1:{self.server.server_port}', f'localhost:{self.server.server_port}'}
-
-        def send(self, code, body, content_type='application/json'):
-            data = body if isinstance(body, bytes) else json.dumps(body, allow_nan=False).encode()
-            self.send_response(code)
-            self.send_header('Content-Type', content_type)
-            self.send_header('Content-Length', str(len(data)))
-            self.send_header('Cache-Control', 'no-store')
-            self.send_header('X-Content-Type-Options', 'nosniff')
-            self.send_header('Content-Security-Policy', "default-src 'self'; script-src 'self'; style-src 'self'; connect-src 'self'; frame-ancestors 'none'; base-uri 'none'")
-            self.end_headers()
-            self.wfile.write(data)
 
         def do_GET(self):
             if not self.allowed_host():
@@ -389,13 +390,19 @@ def handler_for(state):
                     return self.send(200, result)
                 except (ValueError, OSError, sqlite3.Error, TypeError, IndexError, KeyError, zlib.error):
                     return self.send(400, {'error': 'Unable to open this recording or position'})
-            files = {'/': ('index.html', 'text/html; charset=utf-8'),
-                     '/app.js': ('app.js', 'text/javascript; charset=utf-8'),
-                     '/style.css': ('style.css', 'text/css; charset=utf-8')}
-            if path not in files:
-                return self.send(404, {'error': 'Not found'})
-            name, mime = files[path]
-            self.send(200, (ROOT/'web'/name).read_bytes(), mime)
+            if sharing and path == '/api/share':
+                return self.send(200, sharing.status())
+            if sharing and path == '/api/share/qr':
+                url = sharing.status()['url']
+                if url:
+                    return self.send(200, qr_svg(url), 'image/svg+xml')
+                return self.send(404, {'error': 'Sharing is off'})
+            if sharing and path in ('/share', '/share.js'):
+                return self.asset(('share.html', 'text/html; charset=utf-8') if path == '/share'
+                                  else ('share.js', 'text/javascript; charset=utf-8'))
+            if path in ASSETS:
+                return self.asset(ASSETS[path])
+            return self.send(404, {'error': 'Not found'})
 
         def do_POST(self):
             if not self.allowed_host():
@@ -404,6 +411,23 @@ def handler_for(state):
             if origin not in {f'http://127.0.0.1:{self.server.server_port}',
                               f'http://localhost:{self.server.server_port}'}:
                 return self.send(403, {'error': 'Same-origin requests only'})
+            if sharing and self.path == '/api/share':
+                try:
+                    size = int(self.headers.get('Content-Length', 0))
+                    if not 0 < size <= 256:
+                        raise ValueError('Invalid sharing request')
+                    command = json.loads(self.rfile.read(size))
+                    if isinstance(command, dict) and command.get('action') == 'start':
+                        sharing.start(command.get('address'))
+                    elif command == {'action': 'stop'}:
+                        sharing.stop()
+                    else:
+                        raise ValueError('Unknown sharing command')
+                    return self.send(200, sharing.status())
+                except ValueError as exc:
+                    return self.send(400, {'error': str(exc)})
+                except OSError:
+                    return self.send(409, {'error': 'Could not open the display port (8745) on that address.'})
             if self.path == '/api/recording':
                 try:
                     size = int(self.headers.get('Content-Length', 0))
@@ -470,8 +494,6 @@ def handler_for(state):
             except (ValueError, TypeError):
                 self.send(400, {'error': 'Invalid alert rules'})
 
-        def log_message(self, *args):
-            pass
     return Handler
 
 
@@ -543,7 +565,8 @@ def main():
             state.clear('Reader setup failed: ' + type(exc).__name__)
             print('Reader setup failed:', str(exc), flush=True)
     server_type = TrayServer if args.tray else ThreadingHTTPServer
-    server = server_type(('127.0.0.1', args.port), handler_for(state))
+    sharing = DisplaySharing(state)
+    server = server_type(('127.0.0.1', args.port), handler_for(state, sharing))
     if args.tray:
         server.state = state
         threading.Thread(target=watch_launcher, args=(server, sys.stdin), daemon=True).start()
@@ -565,6 +588,7 @@ def main():
         pass
     finally:
         server.server_close()
+        sharing.stop()
         with state.lock:
             if state.recordings.db:
                 state.recordings.stop(state, time.monotonic())

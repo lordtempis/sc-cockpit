@@ -28,6 +28,7 @@ internal sealed class TrayContext : ApplicationContext
     private DateTime buildStamp;
     private DateTime nextDiscovery;
     private bool demo, openPending, stopping, quitting;
+    private string openPath = "/";
     private volatile string readerStatus = "Starting reader";
     private volatile string lastError;
     private volatile int port;
@@ -47,6 +48,7 @@ internal sealed class TrayContext : ApplicationContext
         status.Enabled = false;
         menu.Items.Add(status);
         menu.Items.Add("Open dashboard", null, delegate { OpenDashboard(); });
+        menu.Items.Add("Share dashboard on local network…", null, delegate { OpenDashboard("/share"); });
         menu.Items.Add("Locate game…", null, delegate { SelectGame(); });
         menu.Items.Add(mode);
         mode.Click += delegate { if (!stopping) SwitchReader(!demo, demo ? Launcher.FindGame() : null); };
@@ -182,20 +184,21 @@ internal sealed class TrayContext : ApplicationContext
                 (game != null && File.GetLastWriteTimeUtc(game) != buildStamp))
                 SwitchReader(false, detected);
         }
-        if (openPending && port != 0 && !stopping) OpenDashboard();
+        if (openPending && port != 0 && !stopping) OpenDashboard(openPath);
         string label = !demo && game == null && readerStatus == "Waiting for telemetry" ? "Waiting for game installation" : readerStatus;
         status.Text = label;
         tray.Text = "SC Cockpit · " + label;
     }
 
-    private void OpenDashboard()
+    private void OpenDashboard(string path = "/")
     {
+        openPath = path;
         openPending = true;
         if (reader == null && !quitting && !stopping) StartReader();
         int currentPort = port;
         if (currentPort == 0 || stopping || quitting) return;
         openPending = false;
-        try { Process.Start(new ProcessStartInfo("http://127.0.0.1:" + currentPort + "/") { UseShellExecute = true }); }
+        try { Process.Start(new ProcessStartInfo("http://127.0.0.1:" + currentPort + path) { UseShellExecute = true }); }
         catch (Exception ex) { ShowError(ex.Message); }
     }
 

@@ -13,8 +13,8 @@ from zipfile import ZipFile, ZIP_DEFLATED
 ROOT = Path(__file__).resolve().parents[1]
 PACK = ROOT / 'packaging'
 APPLICATION = ('cockpit.py', 'dashboard.py', 'demo.py', 'extract_schema.py', 'kill_monitor.py', 'session_activity.py',
-               'diagnostics.py', 'recordings.py', 'capture_doors.py',
-               'web/index.html', 'web/style.css', 'web/app.js')
+               'diagnostics.py', 'recordings.py', 'capture_doors.py', 'sharing.py', 'vendor/qrcodegen.py',
+               'web/index.html', 'web/style.css', 'web/app.js', 'web/share.html', 'web/share.js')
 RUNTIME = {'python.exe', 'python3.dll', 'python312.dll', 'vcruntime140.dll', 'vcruntime140_1.dll', 'LICENSE.txt'}
 SKIP_LIB = {'site-packages', '__pycache__', 'test', 'tests', 'ensurepip', 'idlelib', 'tkinter', 'turtledemo', 'venv'}
 FOLDER = 'SC Cockpit/'

@@ -161,3 +161,12 @@ details[open] summary { margin-bottom: .8rem; }
 .diag-table td, .diag-table th { padding: .35rem .5rem; border-bottom: 1px solid var(--line); text-align: left; overflow-wrap: anywhere; }
 .diag-table th { background: var(--panel); position: sticky; top: 0; }
 #diag-metadata, #replay-time { color: var(--muted); font-family: var(--mono); }
+
+.sharing-page { max-width: 38rem; padding-block: 2rem; }
+.sharing-page a, #share-dashboard { color: var(--accent); }
+.sharing-page label, .sharing-page img, .sharing-page input { display: block; margin: .8rem 0; }
+.sharing-page input { width: 100%; padding: .6rem; }
+.sharing-page img { max-width: 100%; height: auto; }
+.sharing-page button { margin: .35rem 0; }
+html[data-tablet] :is(.alert-panel, #inspect, #feed-dialog, #kill-log-card, #event-category-label) { display: none; }
+html[data-tablet] #source:disabled { opacity: 1; cursor: default; }

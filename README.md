@@ -56,6 +56,19 @@ Field delivery varies with the game build, ship and seat. Hydrogen fill is shown
 3. Under **Saved recording**, select the session and choose **Open replay**. It opens paused and works with the game closed. Play, seek or jump to a bookmark to inspect readings and feed interruptions across the dashboard tabs.
 4. Choose **Return to Live** or **Return to Demo** to leave replay.
 
+## Use a tablet as a read-only display
+
+The current source and Wi-Fi test build support private network sharing. The v1.0 download above predates this feature.
+
+1. On the PC, right-click the SC Cockpit tray icon and choose **Share dashboard on local network**. You can also open the feed badge and follow the sharing link.
+2. Select your PC’s Wi-Fi or Ethernet IPv4 address and click **Start sharing**. If Windows Firewall prompts you, allow access on your trusted **Private** network.
+3. On a tablet connected to the same network, scan the QR code or open the full display link, including the trailing slash. Keep the PC reader running. The tablet can choose its own tab and theme.
+4. Click **Stop sharing** on the PC to expire the link. Sharing starts off each time the reader starts. A new sharing session gets a new link.
+
+The tablet displays live or explicitly labeled demo instruments and telemetry events. Recording, alert settings, raw diagnostics, and Game.log details stay on the PC. A game feed interruption appears as a feed status. If the tablet loses Wi-Fi, it shows **Connection to PC lost** and retries automatically.
+
+If the display cannot connect, confirm the PC address, allow the reader through the Windows Private firewall profile on TCP port 8745, and check that the router allows communication between devices. Guest Wi-Fi often isolates clients.
+
 ## Run from source
 
 With Python 3.12 installed, run these commands from the repository root to open a simulated dashboard and run the unit tests.

@@ -1,6 +1,13 @@
 'use strict';
 const names = {health:'Health',oxygen:'Oxygen',hunger:'Nutrition',thirst:'Hydration'};
 const $ = id => document.getElementById(id);
+const tablet = document.documentElement.hasAttribute('data-tablet');
+if (tablet) {
+  $('source').disabled = true;
+  $('source').removeAttribute('aria-haspopup');
+  $('source').title = 'Read-only network display';
+  $('mode').textContent = 'TABLET DISPLAY';
+}
 let audio = null, armed = false, muted = false, hydrated = false, seen = new Set(), latest = null;
 let volume = .4, pendingVoice = null, lastSound = -Infinity;
 for (const [key, name] of Object.entries(names)) {
@@ -387,6 +394,7 @@ function render(data) {
   const replay = data.mode === 'replay';
   const demo = (data.original_mode || data.mode) === 'demo';
   $('mode').textContent=replay ? 'REPLAY' : demo?'DEMO · SIMULATED':'LIVE SOURCE';
+  if (tablet) $('mode').textContent += ' · READ-ONLY';
   $('connection').textContent=statusText(dashboard.feed);
   if (demo && dashboard.feed==='live' && dashboard.scenario==='Partial feed') {
     $('connection').textContent='Partial sample';
@@ -399,7 +407,7 @@ function render(data) {
   $('connection').title = data.detail || statusText(dashboard.feed);
   $('simulation').hidden=!demo || replay;
   $('rules').querySelector?.('button[type=submit]')?.toggleAttribute('disabled', replay);
-  if (demo && !replay && !scenarioMenuReady) {
+  if (demo && !replay && !tablet && !scenarioMenuReady) {
     for (const name of dashboard.scenarios) $('scenario').append(new Option(name,name));
     scenarioMenuReady=true;
   }
@@ -480,10 +488,13 @@ function render(data) {
     }
     hydrated=true;
   }
-  if (!replay && dashboard.feed==='live' && data.events) warnAudio(data);
-  else { pendingVoice=null; window.speechSynthesis?.cancel(); }
+  if (!tablet) {
+    if (!replay && dashboard.feed==='live' && data.events) warnAudio(data);
+    else { pendingVoice=null; window.speechSynthesis?.cancel(); }
+  }
   $('history-panel').hidden = f.speed === undefined && !dashboard.history?.some(([, speed]) => Number.isFinite(speed));
-  drawHistory(); renderLog(); renderSession(data);
+  drawHistory(); renderLog();
+  if (!tablet) renderSession(data);
 }
 function displaySample(sample) {
   try {
@@ -630,7 +641,7 @@ async function refresh() {
   if (openingReplay) return;
   const epoch = ++requestEpoch;
   try {
-    const url = playback ? '/api/replay?file=' + encodeURIComponent(playback.file) + '&at=' + positionNow() : '/api/state';
+    const url = playback ? '/api/replay?file=' + encodeURIComponent(playback.file) + '&at=' + positionNow() : (tablet ? 'api/state' : '/api/state');
     const sample = await sessionJSON(url, {signal:AbortSignal.timeout(3500)});
     if (epoch !== requestEpoch) return;
     if (!playback) homeMode = sample.mode;
@@ -647,6 +658,10 @@ async function refresh() {
     render({mode:homeMode, dashboard:{feed:'disconnected',sections:{},reported:dashboard?.reported,scenarios:[],journal:dashboard?.journal||[],history:[],
       activity:dashboard?.activity,performance:dashboard?.performance,
       kill_monitor:{...dashboard?.kill_monitor,status:'Reader disconnected'}},ages:{},frame:{},active:[],detail:error.message});
+    if (tablet) {
+      $('connection').textContent = 'Connection to PC lost';
+      $('connection').title = 'Reconnecting to the shared dashboard';
+    }
   }
 }
 async function poll() {
