@@ -55,3 +55,25 @@ Field delivery varies with the game build, ship and seat. Hydrogen fill is shown
 2. To mark a moment, enter a bookmark label and choose **Add Bookmark**. Choose **Stop Recording** to save the session. Windows recordings are stored in `%LOCALAPPDATA%\SC-Cockpit\recordings`.
 3. Under **Saved recording**, select the session and choose **Open replay**. It opens paused and works with the game closed. Play, seek or jump to a bookmark to inspect readings and feed interruptions across the dashboard tabs.
 4. Choose **Return to Live** or **Return to Demo** to leave replay.
+
+## Run from source
+
+With Python 3.12 installed, run these commands from the repository root to open a simulated dashboard and run the unit tests.
+
+```sh
+python cockpit.py --demo --open-browser
+```
+
+Close the reader with Ctrl+C, then run the tests.
+
+```sh
+python -m unittest discover -s tests
+```
+
+For a live source run on Windows, install the dependencies with `python -m pip install -r requirements.txt`. Enable telemetry as described above and pass the path to your installed game executable.
+
+```powershell
+python cockpit.py --game-exe "D:\StarCitizen\LIVE\Bin64\StarCitizen.exe" --open-browser
+```
+
+The Windows tray launcher, icon and release builder are in [packaging](packaging/).

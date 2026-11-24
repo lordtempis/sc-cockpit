@@ -1,0 +1,36 @@
+SC Cockpit requires Windows 10 or 11, 64-bit x64. For live readings, run it on the same PC as Star Citizen. Python is bundled.
+
+Extract the ZIP to a folder you plan to keep. Double-click SC-Cockpit-Windows-x64.exe. Overview opens in your browser and the navy-and-teal cockpit icon appears near the Windows clock. If the icon is hidden, open the tray overflow arrow.
+
+Before your first live test
+
+1. Close Star Citizen and fully quit the RSI Launcher, including its system tray icon.
+
+2. Open PowerShell and run this one-time command:
+
+   setx GRPC_CLIENT_SERVER_ENABLED true
+
+3. Reopen the RSI Launcher, start Star Citizen LIVE, and enter the game.
+
+4. Open the in-game console using the key below Esc on a US keyboard. Enter:
+
+   server.game.telemetry.enabled 1
+
+5. Start SC Cockpit if it is not already running. You can close its browser tab and leave it running between game sessions.
+
+Custom install
+
+SC Cockpit checks the running game and the RSI Launcher's recorded location. If the game is not found, right-click the tray icon, choose Locate game, and select StarCitizen.exe inside your installation's LIVE\Bin64 folder. It remembers your choice.
+
+Confirm it's working
+
+Click LIVE SOURCE beside the Light/Dark switch. Diagnostics should say Receiving telemetry and show a recent packet. Player readings work on foot. Sit in a ship to test flight instruments.
+
+
+Using the tray
+
+Double-click the icon or the EXE again to open the dashboard. Right-click the icon to see the telemetry status or choose Open dashboard, Locate game, or Use demo telemetry.
+
+Select Start with Windows to launch quietly at sign-in. Select it again to turn it off. Keep the EXE in the same folder while this option is enabled.
+
+Use Quit SC Cockpit to finish any active recording and close the reader. Recording starts only when you choose Start Recording in the dashboard.

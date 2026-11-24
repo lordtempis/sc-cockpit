@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Overview · SC Cockpit</title><link rel="stylesheet" href="/style.css"><script src="/app.js" defer></script></head>
+<body>
+<header class="topbar"><div class="bar-inner">
+  <div class="brand"><span class="emblem" aria-hidden="true">✦</span>SC Cockpit</div>
+  <nav class="nav-list" aria-label="Dashboard views">
+    <button type="button" class="nav-item" data-page="overview" aria-current="page" aria-pressed="true">Overview</button>
+    <button type="button" class="nav-item" data-page="player" aria-pressed="false">Player</button>
+    <button type="button" class="nav-item" data-page="flight" aria-pressed="false">Flight Deck</button>
+    <button type="button" class="nav-item" data-page="systems" aria-pressed="false">Ship Systems</button>
+    <button type="button" class="nav-item" data-page="log" aria-pressed="false">Event Log</button>
+  </nav>
+  <div class="top-status">
+    <div class="theme-switch" role="group" aria-label="Dashboard theme">
+      <button type="button" id="theme-light" aria-pressed="false">Light</button>
+      <button type="button" id="theme-dark" aria-pressed="false">Dark</button>
+    </div>
+    <button class="source" id="source" type="button" aria-haspopup="dialog" title="Open telemetry diagnostics"><span id="mode">Local reader</span><span id="recording-lamp" hidden>● Recording</span><span id="connection" role="status">Waiting for first sample</span></button>
+  </div>
+</div></header>
+<main>
+<section id="replay-tools" class="panel playback" aria-label="Replay controls" hidden>
+  <strong>Replay</strong><button id="replay-play">Play</button>
+  <label>Position <input type="range" id="replay-seek" min="0" max="0" step="0.01"></label>
+  <output id="replay-time"></output><label>Bookmark <select id="replay-marks"></select></label>
+  <button id="replay-return">Return to Live</button>
+</section>
+<section class="view" id="overview" aria-labelledby="overview-title">
+  <div class="heading"><h1 id="overview-title">Overview</h1></div>
+  <div class="desk">
+    <section class="instrument-group" aria-labelledby="player-title">
+      <header class="group-heading"><h2 id="player-title">Player</h2><span id="overview-seat" class="badge"></span></header>
+      <div class="gauge-grid">
+        <div class="gauge" id="health-gauge" role="meter" aria-label="Health" aria-valuemin="0" aria-valuemax="100" hidden>
+          <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="track" cx="60" cy="60" r="54"/><circle id="health-arc" class="arc" cx="60" cy="60" r="54" pathLength="100" stroke-dasharray="0 100" visibility="hidden"/></svg>
+          <div class="dial-text"><strong id="health-value">—</strong><span>Health</span></div>
+        </div>
+        <div class="gauge" id="oxygen-gauge" role="meter" aria-label="Oxygen" aria-valuemin="0" aria-valuemax="100" hidden>
+          <svg viewBox="0 0 120 120" aria-hidden="true" focusable="false"><circle class="track" cx="60" cy="60" r="54"/><circle id="oxygen-arc" class="arc" cx="60" cy="60" r="54" pathLength="100" stroke-dasharray="0 100" visibility="hidden"/></svg>
+          <div class="dial-text"><strong id="oxygen-value">—</strong><span>Oxygen</span></div>
+        </div>
+      </div>
+      <div id="primaries" class="metrics small-metrics"></div>
+      <section class="supplies"><h3>Suit supplies</h3><div id="suit-reserves" class="rows"></div></section>
+      <div id="player-context" class="rows context-rows"></div>
+      <small id="overview-actor-feed" class="section-status"></small>
+    </section>
+    <section class="instrument-group" aria-labelledby="flight-title">
+      <header class="group-heading"><h2 id="flight-title">Flight</h2><span id="overview-ship" class="subtitle"></span></header>
+      <div id="motion" class="metrics"></div>
+      <div class="flight-lower">
+        <section><h3>Propulsion reserves</h3><div id="reserves" class="rows"></div></section>
+        <section><h3>Ship configuration</h3><div id="flight-config" class="rows"></div></section>
+      </div>
+      <small id="overview-flight-feed" class="section-status"></small>
+    </section>
+  </div>
+  <p class="sample-time" id="sample-time"></p>
+  <article class="panel" id="gunner-panel" hidden>
+    <div class="section-title"><h2>Gunner station</h2><span id="gunner-feed" class="stamp"></span></div>
+    <div class="rows" id="gunner-weapons"></div>
+  </article>
+  <article class="panel" id="overview-kill-panel" hidden><h2>Kill monitor</h2><div id="overview-kill-report" class="rows" aria-live="polite"></div></article>
+<article class="panel" id="activity-panel" hidden><div class="section-title"><h2>Session activity</h2><span id="activity-source" class="tag"></span></div><div class="rows" id="activity-summary"></div></article>
+</section>
+<section class="view" id="player" hidden><div class="heading"><h1>Player</h1><span id="actor-feed" class="stamp"></span></div>
+<div class="split special"><article class="panel"><h2>Suit and vitals</h2><div id="support" class="rows"></div></article><article class="panel"><h2>Environment and seat</h2><div id="context" class="rows"></div></article></div>
+<div class="warning-strip" role="status"><strong>Vital warnings</strong><span id="warnings">Waiting for readings</span></div><details class="alert-panel"><summary>Audio alert settings</summary><div class="section-title"><strong>Alert playback enabled</strong><span id="audio-status"></span></div><p class="muted">Choose a warning threshold for each vital. A warning speaks once per low episode, with a 60-second cooldown.</p><div class="audio-controls"><button id="enable-audio">Enable audio</button><button id="test-audio">Test sound</button><button id="mute" aria-pressed="false">Mute</button></div><label class="volume">Volume <input id="volume" type="range" min="0" max="100" value="40"><output id="volume-value">40%</output></label><form id="rules"><div id="rule-rows"></div><button type="submit">Apply thresholds</button><span id="save-status" role="status"></span></form></details></section>
+<section class="view" id="flight" hidden><div class="heading"><div><h1>Flight Deck</h1><p class="subtitle" id="flight-subtitle">Awaiting vessel telemetry</p></div><span id="flight-feed" class="stamp"></span></div><article class="panel" id="history-panel" hidden><div class="section-title"><h2>Speed history</h2><div role="group" aria-label="History window"><button class="window" data-window="30" aria-pressed="true">30 s</button><button class="window" data-window="60" aria-pressed="false">60 s</button></div></div><canvas id="history" height="130" aria-label="Speed over the selected time window"></canvas><small id="history-label"></small></article>
+<article class="panel"><div class="section-title"><h2>Recent events</h2><button type="button" id="open-log" class="window">Open Event Log</button></div><ol class="journal" id="recent-events"></ol></article></section>
+<section class="view" id="systems" hidden><div class="heading"><h1>Ship Systems</h1><span id="systems-feed" class="stamp"></span></div><div class="split special"><article class="panel"><h2>Power distribution</h2><div class="rows" id="power"></div></article><article class="panel"><h2>System indicators</h2><div class="rows" id="indicators"></div></article><article class="panel"><h2>Ship configuration</h2><div class="rows" id="sys-config"></div></article><article class="panel"><h2>Flight assists</h2><div class="rows" id="assists"></div></article><article class="panel"><h2>Weapons</h2><small id="weapons-feed"></small><div class="rows" id="armament"></div></article></div></section>
+<section class="view" id="log" hidden><div class="heading"><h1>Event Log</h1><label><input type="checkbox" id="warn-filter"> Warnings only</label></div><article class="panel"><h2>Kill monitor</h2><div id="kill-monitor" class="rows"></div></article><article class="panel"><div class="section-title"><h2>Session events</h2><label>Show <select id="event-category"><option value="">All events</option><option>Mission</option><option value="Combat">Credited ship kills</option><option>Travel</option><option>Zone</option></select></label></div><ol class="journal" id="entries"></ol></article>
+<article class="panel" id="performance-panel" hidden><h2>Last saved performance report</h2><div class="rows" id="performance-rows"></div></article></section>
+<details id="inspect"><summary>Inspect incoming telemetry</summary><pre id="raw">{}</pre></details></main><dialog id="feed-dialog" aria-labelledby="feed-title"><div class="panel-head"><h2 id="feed-title">Telemetry diagnostics</h2><form method="dialog"><button class="dialog-close" aria-label="Close">×</button></form></div><div class="dialog-body"><p id="feed-detail"></p><p id="diag-metadata"></p>
+<section><h3>Recordings</h3><div class="session-actions">
+<button id="record-start">Start Recording</button><button id="record-stop" disabled>Stop Recording</button>
+<label>Bookmark label <input id="mark-label" maxlength="120"></label><button id="record-mark" disabled>Add Bookmark</button>
+</div><div class="session-actions"><label>Saved recording <select id="record-files"></select></label>
+<button id="record-open" disabled>Open replay</button></div><p id="record-feedback" role="status"></p></section>
+<label>Find a field <input id="diag-filter" type="search"></label>
+<h3>Mapped fields</h3><div class="diag-table"><table><thead><tr><th>Field</th><th>Latest value</th><th>Unit</th><th>Age</th><th>Status</th></tr></thead><tbody id="diag-fields"></tbody></table></div>
+<details id="diag-input-panel"><summary>Decoder field delivery</summary><p class="muted">Unseen on wire means the decoder knows the field and has received no value for it this session. Unknown means delivery cannot be established.</p><div class="diag-table"><table><thead><tr><th>Input field</th><th>Delivery</th><th>Adapter</th><th>Last value</th><th>Age</th></tr></thead><tbody id="diag-inputs"></tbody></table></div></details><div class="demo-tools" id="simulation" hidden><label for="scenario" class="row-label">Demo scenario</label><select id="scenario" aria-label="Demo scenario"></select><button class="action" id="pause" type="button">Ⅱ&nbsp; Pause demo</button></div><button id="fullscreen" type="button">Full screen</button></div></dialog></body></html>

@@ -1,0 +1,17 @@
+SC Cockpit for Windows 10/11 (64-bit x64)
+
+1. Right-click the ZIP, choose Extract All, then open the extracted folder.
+2. Double-click SC Cockpit.exe. The cockpit icon appears in the Windows notification area.
+3. Your default browser opens Overview. If it doesn't, double-click the tray icon to open it.
+
+Live mode requires Star Citizen on the same PC with local telemetry enabled. Spawn into the game for readings. A standard LIVE installation is detected automatically. For another location, right-click the tray icon, choose Locate game, and select LIVE\Bin64\StarCitizen.exe. Your selection is remembered for the next launch.
+
+If you still need to enable telemetry on the supported LIVE build:
+1. In Windows PowerShell, run: setx GRPC_CLIENT_SERVER_ENABLED true
+2. Fully exit and restart the RSI Launcher and the game.
+3. In the in-game console, enter: server.game.telemetry.enabled 1
+The reader connects to the game on this PC and waits for your first sample.
+
+To explore the dashboard without the game, double-click Try Demo.cmd. If SC Cockpit is already running, choose Use demo telemetry in its tray menu. Simulated readings are labeled DEMO.
+
+To stop the reader and finish any active recording, right-click the icon and choose Quit SC Cockpit. To move or share the app, keep the entire extracted folder together or share the original ZIP. The package includes its own Python runtime and dependencies.
